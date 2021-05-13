@@ -474,6 +474,9 @@ modelsummary(models = list("Multivariate Regression Model Statistics After Lin-L
             statistic = c("p.value", "conf.int", "std.error", "statistic"),
             output = "markdown")
 
+# Removing old variables
+rm(linLog)
+
 ```
 
 This transformation improved the amount of variation the predictors explain in the natural log transform of the dependent variable. From the initial regression, the difference between the R-square and adjusted R-square remained roughly the same in this new model, however, the R-square in the new model is considerably greater at .568. The significance of the variables remains unchanged--only masks and the nursing home coefficients are significant.
@@ -494,5 +497,58 @@ summary(lm(data = covidData, formula = deathLN ~ I(log(Nursing)) +
 
 *An Improved Model*
 
-The degree of multicollinearity within the original model mandated that measures be taken to alter the equation. Removing density from the model made modest improvements in the significance of variables, but the gains were merely incremental and changed little in the regression results. Substituting in a proxy variable for the state population density did not improve the results on the variables in their original form. Variable transformation proved very effective at improving the results of the regressions. Although not shown in the regressions above, the p-value in a simple linear regression of new COVID deaths against urban density was significant at the 0.1 level of significance. This made me curious to see whether a "lin-log" transformation of the urban variable would improve the results of the regression. Intuitively, the urban density variable is a better proxy for how frequently people come into contact with one another than the state population density and should therefore make a more accurate predictor in
-the model. Despite the fact that multicollinearity in the model increased after replacing state population density with urban density, the "lin-log" method should have eased the problems posed by the greater level of multicollinearity. The results of the regression using urban density and the "lin-log" method are the following:
+The degree of multicollinearity within the original model mandated that measures be taken to alter the equation. Removing density from the model made modest improvements in the significance of variables, but the gains were merely incremental and changed little in the regression results. Substituting in a proxy variable for the state population density did not improve the results on the variables in their original form. Variable transformation proved very effective at improving the results of the regressions. Although not shown in the regressions above, the p-value in a simple linear regression of new COVID deaths against urban density was significant. This made me curious to see whether a "lin-log" transformation of the urban variable would improve the results of the regression. Intuitively, the urban density variable is a better proxy for how frequently people come into contact with one another than the state population density and should therefore make a more accurate predictor in the model. Despite the fact that multicollinearity in the model increased after replacing state population density with urban density, the "lin-log" method should have eased the problems posed by the greater level of multicollinearity. The results of the regression using urban density and the "lin-log" method are the following:
+
+```{r simple log density, eval = FALSE}
+
+# The simple linear regression model described above.
+summary(lm(deathLN ~ covidData$Urban.Density))
+
+```
+
+```{r improved model}
+
+results4 <- lm(data = covidData, formula = deathLN ~ Nursing +
+                 Elderly +
+                 `% Wearing Mask` +
+                 `Total Tests per 100k` +
+                 `Has Strict Lockdown` + 
+                 `Urban.Density`)
+
+
+# The model summary
+modelsummary(models = list("Multivariate Regression Model Statistics After Lin-Log Transformation, With Urban Density" = results4),
+            statistic = c("p.value", "conf.int", "std.error", "statistic"),
+            output = "markdown")
+
+# Removing old variables
+rm(results4)
+
+```
+
+This did not improve the model, more than the model presented in the 'lin-log' section. Removing the elderly variable from the regression is an excellent choice to increase the degrees of freedom while also reducing the level of multicollinearity among the variables, however. Keeping both a rate of the number of people in nursing facilities---people who are typically very old---and the percent of the population over age 65 seems redundant. The reason the elderly population variable was included was to have a proxy for the population of people who are most susceptible to the virus. The nursing facility variable already fills this role, so there is little justification for keeping the Elderly variable in the model. The results of the 'lin-log' model after this removal are as follows:
+
+```{r final model}
+
+results5 <- lm(data = covidData, formula = deathLN ~ Nursing +
+                 `% Wearing Mask` +
+                 `Total Tests per 100k` +
+                 `Has Strict Lockdown` + 
+                 `Urban.Density`)
+
+
+# The model summary
+modelsummary(models = list("Multivariate Regression Model Statistics After Lin-Log Transformation, Without Elderly" = results5),
+            statistic = c("p.value", "conf.int", "std.error", "statistic"),
+            output = "markdown")
+
+# Removing old variables
+rm(results5)
+
+```
+
+This revised model has reduced multicollinearity to a more acceptable level and improved the significance of the predictors in the process. The multicollinearity which remains is likely minimal and should not dramatically affect the conclusions drawn from this analysis. The measures taken to reduce multicollinearity also lowered the p-values dramatically and doubled the number of significant variables from two to four. Although the R-square dropped by .05 in this revised model, it is still preferable to the initial model because the results obtained in the revised model are considerably more reliable with respect to the significance of the variables.
+
+*Identifying Heteroscedasticity*
+
+[Step 1. Visual Analysis of Data]{.ul}: Homoscedasticity, perhaps known better as "equal spread", of the data in the regression is necessary for the assumptions of OLS to hold. If the standard error at a given area of the sample regression function (SRF) is not the same as all the other areas of the SRF, the model's results may be misleading. After visual analysis, the data appears to have homoscedasticity.
