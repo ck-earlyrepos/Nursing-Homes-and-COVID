@@ -106,7 +106,7 @@ perturb::colldiag(results)
 print(olsrr::ols_vif_tol(model = results), digits = 4)
 
 
-
+print(olsrr::ols_vif_tol(model = lm(formula = mtcars$mpg ~ mtcars$cyl)), digits = 4)
 
 
 

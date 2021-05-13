@@ -5,7 +5,7 @@ date: "11/31/2020"
 output: html_document
 ---
 
-#### **The Story:** 
+#### **The Story:**
 
 Old people in nursing homes are dying en masse to the coronavirus, skewing the death rate upward and providing public officials greater justification for prolonged lockdowns. This is a common talking point I have heard over the past 6 months and I think econometrics provides a unique opportunity to test it out.
 
@@ -52,7 +52,7 @@ pacman::p_load(corrplot, car, skedastic,
                pastecs, QuantPsyc, olsrr,
                perturb)
 
-library(janitor)
+library(backports)
 
 
 # The csv file
@@ -74,18 +74,14 @@ covidData <- read_csv("COVID data.csv",
 
 Using regression analysis subject to the BLUE method of Least Squares, I will test cross-sectional data from the 50 states and DC using the following equation:
 
-\$Deaths = β~1~ + β~2~Nursing + β~3~Tests +
-β~4~Elderly + β~5~Mask + β~6~Density + β~7~Lockdown\$
+\$Deaths = β~1~ + β~2~Nursing + β~3~Tests + β~4~Elderly + β~5~Mask + β~6~Density + β~7~Lockdown\$
 
 +--------------------------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | **Variable**             | **Definition**                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    | **Source**                                                                                                                                                                              |
 +:========================:+:=================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================:+:=======================================================================================================================================================================================:+
-| Deaths (Y)               | The sum of the increase in deaths from the previous day from October 19th, 2020 to October 23rd, 2020 as a rate per 100000 persons, where deaths are defined as the "Total fatalities with confirmed OR probable case diagnoses (per the expanded CSTE case definition of April 5th, 2020 approved by the CDC) In states where the information is available, it only tracks fatalities with confirmed OR probable COVID-19 case diagnosis where on the death certificate, COVID-19 is listed as an underlying cause of death according to WHO guidelines."                                                                        | The COVID Tracking Project for the                                                                                                                                                      |
-|                          |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   | death data.                                                                                                                                                                             |
+| Deaths (Y)               | The sum of the increase in deaths from the previous day from October 19th, 2020 to October 23rd, 2020 as a rate per 100000 persons, where deaths are defined as the "Total fatalities with confirmed OR probable case diagnoses (per the expanded CSTE case definition of April 5th, 2020 approved by the CDC) In states where the information is available, it only tracks fatalities with confirmed OR probable COVID-19 case diagnosis where on the death certificate, COVID-19 is listed as an underlying cause of death according to WHO guidelines."                                                                        | The COVID Tracking Project for the death data.                                                                                                                                          |
 |                          |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |                                                                                                                                                                                         |
-|                          |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   | Kaiser                                                                                                                                                                                  |
-|                          |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   | Family Foundation analysis of Certification and Survey Provider Enhanced                                                                                                                |
-|                          |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   | Reports (CASPER) data for the population data.                                                                                                                                          |
+|                          |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   | Kaiser Family Foundation analysis of Certification and Survey Provider Enhanced Reports (CASPER) data for the population data.                                                          |
 +--------------------------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | Nursing (β~2~)           | The number of people in nursing homes per 100000 adults.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          | Kaiser Family Foundation analysis of Certification and Survey Provider Enhanced Reports (CASPER) data; The CASPER system includes data for all certified nursing facilities in the U.S. |
 +--------------------------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
@@ -102,15 +98,23 @@ Using regression analysis subject to the BLUE method of Least Squares, I will te
 | Urban (introduced later) | 2010 urban land area (the "physical city"), measured in square miles, divided by urban population.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                | Data pulled from newsgeography.com; they collected the data from the U.S. Census Bureau.                                                                                                |
 +--------------------------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 
-|    Variable     | Expected Sign | Expected Statistical Significance | Expected Practical Significance |
-|:---------------:|:-------------:|:---------------------------------:|:-------------------------------:|
-| Nursing (β~2~)  |      \+       |         Low Significance          |      Moderate Significance      |
-|  Tests (β~3~)   |      \-       |       Moderate Significance       |      Moderate Significance      |
-| Elderly (β~4~)  |      \+       |       Moderate Significance       |      Moderate Significance      |
-|   Mask (β~5~)   |      \-       |         High Significance         |        High Significance        |
-| Density (β~6~)  |      \+       |         Low Significance          |        Low Significance         |
-| Lockdown (β~7~) |      \-       |       Moderate Significance       |      Moderate Significance      |
-|      Urban      |      \+       |       Moderate Significance       |      Moderate Significance      |
++-----------------+---------------+-----------------------------------+---------------------------------+
+| Variable        | Expected Sign | Expected Statistical Significance | Expected Practical Significance |
++:===============:+:=============:+:=================================:+:===============================:+
+| Nursing (β~2~)  | \+            | Low Significance                  | Moderate Significance           |
++-----------------+---------------+-----------------------------------+---------------------------------+
+| Tests (β~3~)    | \-            | Moderate Significance             | Moderate Significance           |
++-----------------+---------------+-----------------------------------+---------------------------------+
+| Elderly (β~4~)  | \+            | Moderate Significance             | Moderate Significance           |
++-----------------+---------------+-----------------------------------+---------------------------------+
+| Mask (β~5~)     | \-            | High Significance                 | High Significance               |
++-----------------+---------------+-----------------------------------+---------------------------------+
+| Density (β~6~)  | \+            | Low Significance                  | Low Significance                |
++-----------------+---------------+-----------------------------------+---------------------------------+
+| Lockdown (β~7~) | \-            | Moderate Significance             | Moderate Significance           |
++-----------------+---------------+-----------------------------------+---------------------------------+
+| Urban           | \+            | Moderate Significance             | Moderate Significance           |
++-----------------+---------------+-----------------------------------+---------------------------------+
 
 **Hesitations**
 
@@ -226,11 +230,11 @@ The following table displays the preliminary results estimating the COVID death 
 
 ```{r initial multiple regression}
 
-results <- lm(data = covidData, `Death Rate` ~ Nursing +
-                Elderly + `% Wearing Mask` +
+results <- lm(`Death Rate` ~ `Nursing` +
+                `Elderly` + `% Wearing Mask` +
                 `Population Density (p/mi^2)`+
                 `Total Tests per 100k` +
-                `Has Strict Lockdown`)
+                `Has Strict Lockdown`, data = covidData,)
 
 modelsummary(models = list(results),
             statistic = c("p.value", "conf.int", "std.error", "statistic"),
@@ -277,6 +281,9 @@ datasummary_correlation(correlation,
                         title = "Zero-Order Correlation Coefficients",
                         output = "markdown")
 
+# Removing old variables
+rm(correlation)
+
 ```
 
 Of the 10 possible combinations of the explanatory variables---excluding the lockdown variable because Pearson correlations require continuous variables---all but three exhibit a negligible degree of multicollinearity (defined as a zero-order correlation coefficient less than \|0.3\|). To examine the three combinations with a higher degree of multicollinearity, the t-stat between each relationship will be considered. The following table details the statistical significance of the variable combinations with a zero-order correlation greater than \|0.3\|:
@@ -307,15 +314,70 @@ rm(pop_mask, nurse_mask, test_density)
 
 As the table shows, all three variables having a substantial zero-order correlation coefficient also have a statistically significant p-values, meaning measures should be taken to reduce multicollinearity's effects on the model.
 
-To explore the problem multicollinearity poses to the linear model, collinearity diagnostics and statistics, including condition indices and tolerance levels, were considered. The table below displays the figures calculated from these tests, using the death rate as the dependent variable:
+To explore the problem multicollinearity poses to the linear model, collinearity diagnostics and statistics, including condition indices and the variance inflation factor, were considered. The table below displays the figures calculated from these tests, using the death rate as the dependent variable:
 
 ```{r variance proportion}
 
 # The variance proportion table (also provides eigenvalues in column 1)
-kable(print(olsrr::ols_eigen_cindex(results)[, -c(1, 3, 9)], digits = 3), caption = "Collinearity Diagnostics: Variance Proporitons (Dependent Variable: Death)")
+kable(olsrr::ols_eigen_cindex(results)[, -c(1, 3, 9)],
+      digits = 3,
+      caption = "Collinearity Diagnostics: Variance Proporitons (Dependent Variable: Death)")
 
-
-# The VIF and Tolerance collinearity statistics
-kable(print(olsrr::ols_vif_tol(model = results), digits = 4), caption = "Collinearity Statistics")
+kable(data.frame("VIF" = car::vif(results)), caption = "VIF Score")
 
 ```
+
+The table above indicates that there are three conditions with a variance proportion greater than the "acceptable" range of 0.5. When observing the variance of inflation factors, all of the variables are close to 1, meaning there is little correlation among the kth predictor and the remaining predictor variables, and hence the variance of B­~k~ is inflated minimally by the presence of other variables.
+
+Despite the promising results of the collinearity statistics, steps to minimize multicollinearity in the regression model will be pursued, first by removing a variable deemed nonessential to the investigation. If removing variables does not remove multicollinearity enough to make a meaningful difference, a proxy variable will be introduced to attempt to resolve this issue. Finally, if neither of those fix multicollinearity, transformations of the variables in the initial model will be attempted using log-lin, lin-log, and log-log methods to examine the relationship between changes in explanatory variables to describe changes in the dependent variable.
+
+**Resolving Multicollinearity**
+
+*Method 1: Removing nonessential variables*
+
+The best candidate to remove from the model is the population density variable. It has an extreme outlier due to the District of Columbia having a far higher population density than that of entire states and has the two strongest correlations among variables in the model. The District of Columbia was not removed from the model because its observation in the population density variable was the only variable in the entire model containing an outlier more than three sample standard deviations away from the mean. Even after removing the District of Columbia from the dataset, changes in the significance were minimal. Regardless, removing the population density variable will also remove the only outlier in the dataset. Further, population density does not serve as an ideal proxy for how frequently people come into contact with one another (and hence increase the spread of the coronavirus); it is deeply flawed, as people are not dispersed evenly within the state's borders---many (if not most) live in cities while the rest of the state remains rural. The following table shows the results from removing population density variable from the initial regression model:
+
+```{r after removing density}
+
+### After removing the population density variable
+results2 <- lm(data = covidData, formula = `Death Rate` ~ Nursing +
+                 Elderly +
+                 `% Wearing Mask` +
+                 `Total Tests per 100k` +
+                 `Has Strict Lockdown`)
+
+# The model summary
+modelsummary(models = list("After Removing Density" = results2),
+            statistic = c("p.value", "conf.int", "std.error", "statistic"),
+            output = "markdown")
+
+# The variance proportion table (also provides eigenvalues in column 1)
+kable(olsrr::ols_eigen_cindex(results2)[, -c(1, 3, 9)],
+      digits = 3,
+      caption = "Collinearity Diagnostics: Variance Proporitons (Dependent Variable: Death)")
+
+# The VIF score
+kable(data.frame("VIF" = car::vif(results2)), caption = "VIF Score")
+
+# Correlation matrix
+correlation2 <- as.data.frame(cor(covidData[,c(-1 ,-5, -8, -9)]))
+
+# Renaming the variables the way they are in my official model in the document
+colnames(correlation2) <- c("Mask", "Density", "Tests", "Elderly", "Nursing")
+rownames(correlation2) <- c("Mask", "Density", "Tests", "Elderly", "Nursing")
+
+# The numeric output
+datasummary_correlation(correlation2,
+                        title = "Zero-Order Correlation Coefficients",
+                        output = "markdown")
+
+# Removing old variables
+rm(correlation2, results2)
+
+```
+
+Although removing the density variable had negligible effects on R-square, the p-values lowered for all values except Tests, which was expected. Since collinearity between masks and nursing is still above the \|0.3\| benchmark, further steps should be taken to soften this issue.
+
+*Method 2: Substituting in proxies*
+
+As noted in the beginning of this section, one of the greatest problems with the state population density variable is that it does not take into account where in a state most people are clustered. In an attempt to remedy the lingering multicollinearity, a proxy variable containing urban population density was substituted in the place of the density by state population and landmass variable. States with more urban land and more people living in it have greater urban densities than states with only a few large cities but extensive landmass. The new regression model is shown in the table below:

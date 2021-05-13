@@ -51,7 +51,7 @@ results2 <- lm(data = covidData, `Death Rate` ~ nursingsq +
                 testssq +
                 `Has Strict Lockdown`)
 summary(results2)
-summary(results)
+#summary(results)
 gtsummary::tbl_regression(results2)
 
 
