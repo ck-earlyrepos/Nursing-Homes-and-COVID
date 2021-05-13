@@ -170,6 +170,23 @@ The table above shows that two of the explanatory variables have statistically s
 
 Further, it is important to note that all variables were assumed to have a straight-line relationship with the dependent variable. The figure below plots all explanatory variables against the dependent variable. No obvious relationship emerges from any of the variables, so a straight-line relationship will be assumed for each variable. In fact, preliminary tests performed showed regression statistics are slightly improved by adopting a quadratic relationship between the variables, yet no clear, logical explanation why this may be the case is apparent from the data, and no obvious story can be told using a different linear relationship.
 
+```{r preliminary tests, eval = FALSE}
+
+# This chunk will not evaluate when knitting.
+# The 'slightly better' non-straight line results mentioned in the text above.
+
+summary(lm(data = covidData, formula = `Death Rate` ~ poly(`% Wearing Mask`, 2)))
+
+summary(lm(data = covidData, formula = `Death Rate` ~ poly(`Population Density (p/mi^2)`, 2)))
+
+summary(lm(data = covidData, formula = `Death Rate` ~ poly(`Total Tests per 100k`, 2)))
+
+summary(lm(data = covidData, formula = `Death Rate` ~ poly(Elderly, 2)))
+
+summary(lm(data = covidData, formula = `Death Rate` ~ poly(Nursing, 2)))
+
+```
+
 ```{r plots}
 
 # This section of code plots all the different variables against one another.
@@ -220,9 +237,6 @@ modelsummary(models = list(results),
             notes = "Predictors: Percent Wearing Masks, State Population Density, Total COVID Tests Per 100k, Percent of Population over 65, Nursing Home Residents Per 100k Adults",
             output = "markdown")
 
-# Removing old variables
-rm(results)
-
 ```
 
 The R-square value of .5028 suggests that the variables included in the regression model explain approximately half of the variation in the dependent variable. The far lower adjusted R-square value indicates that many of the variables contribute little to the model, which is supported by the low R-squares found in the simple linear regression models.
@@ -270,15 +284,27 @@ Of the 10 possible combinations of the explanatory variables---excluding the loc
 ```{r testing multicollinearity via regressions}
 
 # linear model of masks against density
-summary(lm(formula = covidData$`Population Density (p/mi^2)` ~ covidData$`% Wearing Mask`))
+pop_mask <- lm(data = covidData, formula = `Population Density (p/mi^2)` ~ `% Wearing Mask`)
 
 
 # linear model of masks against nursing
-summary(lm(formula = covidData$Nursing ~ covidData$`% Wearing Mask`))
+nurse_mask <- lm(data = covidData, formula = Nursing ~ `% Wearing Mask`)
 
 # linear model of density against tests
-summary(lm(formula = covidData$`Total Tests per 100k` ~ covidData$`Population Density (p/mi^2)`))
+test_density <- lm(data = covidData, formula = `Total Tests per 100k` ~ `Population Density (p/mi^2)`)
 
 
+modelsummary(models = list("Population vs Masks" = pop_mask,
+                           "Nursing vs Masks" = nurse_mask,
+                           "Tests vs Masks" = test_density),
+            statistic = c("p.value", "conf.int", "std.error", "statistic"),
+            output = "markdown")
+
+# Removing old variables
+rm(pop_mask, nurse_mask, test_density)
 
 ```
+
+As the table shows, all three variables having a substantial zero-order correlation coefficient also have a statistically significant p-values, meaning measures should be taken to reduce multicollinearity's effects on the model.
+
+To explore the problem multicollinearity poses to the linear model, collinearity diagnostics and statistics, including condition indices and tolerance levels, were considered. The table below displays the figures calculated from these tests, using the death rate as the dependent variable:
