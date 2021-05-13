@@ -308,3 +308,14 @@ rm(pop_mask, nurse_mask, test_density)
 As the table shows, all three variables having a substantial zero-order correlation coefficient also have a statistically significant p-values, meaning measures should be taken to reduce multicollinearity's effects on the model.
 
 To explore the problem multicollinearity poses to the linear model, collinearity diagnostics and statistics, including condition indices and tolerance levels, were considered. The table below displays the figures calculated from these tests, using the death rate as the dependent variable:
+
+```{r variance proportion}
+
+# The variance proportion table (also provides eigenvalues in column 1)
+kable(print(olsrr::ols_eigen_cindex(results)[, -c(1, 3, 9)], digits = 3), caption = "Collinearity Diagnostics: Variance Proporitons (Dependent Variable: Death)")
+
+
+# The VIF and Tolerance collinearity statistics
+kable(print(olsrr::ols_vif_tol(model = results), digits = 4), caption = "Collinearity Statistics")
+
+```
