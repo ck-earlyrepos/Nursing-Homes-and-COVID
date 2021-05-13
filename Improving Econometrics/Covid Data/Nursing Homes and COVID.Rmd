@@ -381,3 +381,118 @@ Although removing the density variable had negligible effects on R-square, the p
 *Method 2: Substituting in proxies*
 
 As noted in the beginning of this section, one of the greatest problems with the state population density variable is that it does not take into account where in a state most people are clustered. In an attempt to remedy the lingering multicollinearity, a proxy variable containing urban population density was substituted in the place of the density by state population and landmass variable. States with more urban land and more people living in it have greater urban densities than states with only a few large cities but extensive landmass. The new regression model is shown in the table below:
+
+\#\#\#\#\#\#\#YOU ARE ON RESULTS5 OF THE CORRELATION SCRIPT!!! ONLY CORRELATION, HETERO, AND AUTOCORRELATION REMAIN TO FIX!!!
+
+```{r proxy substitution}
+
+### After adding the urban density variable
+results3 <- lm(data = covidData, formula = `Death Rate` ~ Nursing +
+                 Elderly +
+                 `% Wearing Mask` +
+                 `Total Tests per 100k` +
+                 `Has Strict Lockdown` + 
+                 `Urban.Density`)
+
+# The model summary
+modelsummary(models = list("Multivariate Regression Model Statistics, with Urban Population Density" = results3),
+            statistic = c("p.value", "conf.int", "std.error", "statistic"),
+            output = "markdown")
+
+
+# Correlation matrix
+correlation3 <- as.data.frame(cor(covidData[,c(-1 ,-5, -8, -9)]))
+
+# Renaming the variables the way they are in my official model in the document
+colnames(correlation3) <- c("Mask", "Density", "Tests", "Elderly", "Nursing")
+rownames(correlation3) <- c("Mask", "Density", "Tests", "Elderly", "Nursing")
+
+# The numeric output
+datasummary_correlation(correlation3,
+                        title = "Zero-Order Correlation Coefficients",
+                        output = "markdown")
+
+
+# The variance proportion table (also provides eigenvalues in column 1)
+kable(olsrr::ols_eigen_cindex(results3)[, -c(1, 3, 9)],
+      digits = 3,
+      caption = "Collinearity Diagnostics: Variance Proporitons (Dependent Variable: Death)")
+
+# The VIF score
+kable(data.frame("VIF" = car::vif(results3)), caption = "VIF Score")
+
+
+# Removing old variables
+rm(correlation3, results3)
+
+```
+
+As the charts above illustrate, substituting urban density in for state population density did not resolve multicollinearity in the regression model. Therefore, the use of urban population density is not justified.
+
+*Method 3: Changing the form of the initial regression equation*
+
+[Log-Lin Method:]{.ul} The "log-lin" method of correcting multicollinearity takes the natural logarithm of the explanatory variables and repeats the regression using the new, transformed explanatory variables. The dependent variable remains unchanged. It did not improve the p-values of the variables compared to the initial regression.
+
+```{r log lin, eval = FALSE}
+
+# This chunk does not evaluate--it is meant to prove that I am not
+# a dirty liar in the writing above.
+
+# Variable transformations (lockdown stays the same)
+# "Log-Lin" method
+summary(lm(data = covidData, formula = `Death Rate` ~ I(log(Nursing)) +
+                 I(log(Elderly)) +
+                 I(log(`% Wearing Mask`)) +
+                 I(log(`Total Tests per 100k`)) +
+                 `Has Strict Lockdown` + 
+                 I(log(`Urban.Density`))))
+
+# The results did not improve
+
+```
+
+[Lin-Log:]{.ul} The "lin-log" method of correcting multicollinearity takes the natural log of the dependent variable and performs the regression using the original explanatory variables on the transformed dependent variable. There is a problem with this method in particular because Death (Y) contains values of zero, which is outside the domain of the natural logarithm. For the period sampled for this study, neither Maine nor Vermont had any new deaths due to the coronavirus. To allow this transformation to take place, the zeroes were replaced with values arbitrarily close to zero. The results of the new regression are provided in the tables below:
+
+```{r lin log}
+
+# "Lin-Log" method
+deathLN <- log(covidData$`Death Rate`)
+
+# Death has values that are zero, so we must replace them with a very small value
+deathLN[22] <- 0.00000000000000000000000000000000001
+deathLN[47] <- 0.00000000000000000000000000000000001
+
+linLog <- lm(data = covidData, formula = deathLN ~ Nursing +
+                 Elderly +
+                 `% Wearing Mask` +
+                 `Total Tests per 100k` +
+                 `Has Strict Lockdown` + 
+                 `Population Density (p/mi^2)`)
+
+# The model summary
+modelsummary(models = list("Multivariate Regression Model Statistics After Lin-Log Transformation" = linLog),
+            statistic = c("p.value", "conf.int", "std.error", "statistic"),
+            output = "markdown")
+
+```
+
+This transformation improved the amount of variation the predictors explain in the natural log transform of the dependent variable. From the initial regression, the difference between the R-square and adjusted R-square remained roughly the same in this new model, however, the R-square in the new model is considerably greater at .568. The significance of the variables remains unchanged--only masks and the nursing home coefficients are significant.
+
+[Log-Log:]{.ul} The "log-log" method of correcting multicollinearity involves taking the natural logarithm of both the dependent variable and the explanatory variables. As with the "lin-log" method, the values for Maine and Vermont were given arbitrarily small values to allow the natural logarithm to remain within its domain. This method did not improve the statistical significance of the variables in the regression compared to the original regression, although similar effects on the R-square were found between this and the 'lin log' model.
+
+```{r log log, eval = FALSE}
+
+# "Log-Log" method
+summary(lm(data = covidData, formula = deathLN ~ I(log(Nursing)) +
+                 I(log(Elderly)) +
+                 I(log(`% Wearing Mask`)) +
+                 I(log(`Total Tests per 100k`)) +
+                 `Has Strict Lockdown` + 
+                 I(log(`Urban.Density`))))
+
+```
+
+*An Improved Model*
+
+The degree of multicollinearity within the original model mandated that measures be taken to alter the equation. Removing density from the model made modest improvements in the significance of variables, but the gains were merely incremental and changed little in the regression results. Substituting in a proxy variable for the state population density did not improve the results on the variables in their original form. Variable transformation proved very effective at improving the results of the regressions. Although not shown in the regressions above, the p-value in a simple linear regression of new COVID deaths against urban density was significant at the 0.1 level of significance. This made me curious to see whether a "lin-log" transformation of the urban variable would improve the results of the regression. Intuitively, the urban density variable is a better proxy for how frequently people come into contact with one another than the state population density and should therefore make a more accurate predictor in
+the model. Despite the fact that multicollinearity in the model increased after replacing state population density with urban density, the "lin-log" method should have eased the problems posed by the greater level of multicollinearity. The results of the regression using urban density and the "lin-log" method are the following:
