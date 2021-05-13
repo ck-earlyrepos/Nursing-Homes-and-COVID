@@ -40,7 +40,8 @@ if(!require(pacman)) install.packages("pacman")
 
 
 # General Packages
-pacman::p_load(dplyr, readr, ggplot2, patchwork)
+pacman::p_load(dplyr, readr, knitr,
+               ggplot2, patchwork)
 
 # Project-specific packages
 pacman::p_load(corrplot, car, skedastic,
@@ -105,3 +106,23 @@ Using regression analysis subject to the BLUE method of Least Squares, I will te
 | *Density (β~6~)*  |      \+       |         Low Significance          |        Low Significance         |
 | *Lockdown (β~7~)* |      \-       |       Moderate Significance       |      Moderate Significance      |
 |      *Urban*      |      \+       |       Moderate Significance       |      Moderate Significance      |
+
+**Hesitations**
+
+A weakness key to my variables deals with time---the timeframes on several of my variables do not line up properly. The most notable of these variables is the lockdown variable, which was last updated on September 11^th^, 2020, while several other variables use data from October 23^rd^, 2020. The urban variable used in later iterations of the model contains data from 2010; though it is unlikely drastic urban expansions have happened from one state to another in the last ten years, more recent data would only increase the reliability of the results. Smaller problems dealing with time are with regards to the Nursing (B2) and Elderly (B4) variables. The data in those are from 2019 and---although the difference will probably not matter with elderly---if people are worried about patients in nursing facilities catching the coronavirus, it is possible that many who were in nursing facilities a year ago have decided to go elsewhere, reducing the accuracy of the nursing variable. Another problem is that DC will heavily skew the population density results. Regardless of the accuracy of this model, the coronavirus' dangers cannot be dismissed if all the variables explain little of the variation in the COVID death rate. Other factors, such as lingering symptoms or permanent health problems from the virus also need consideration in discussions of policy.
+
+```{r descriptive statistics}
+
+death <- stat.desc(covidData$`Death Rate`)[c(4:6, 8, 9, 13)]
+mask <- stat.desc(covidData$`% Wearing Mask`)[c(4:6, 8, 9, 13)]
+tests <- stat.desc(covidData$`Total Tests per 100k`)[c(4:6, 8, 9, 13)]
+elderly <- stat.desc(covidData$Elderly)[c(4:6, 8, 9, 13)]
+nursing <- stat.desc(covidData$Nursing)[c(4:6, 8, 9, 13)]
+density <- stat.desc(covidData$`Population Density (p/mi^2)`)[c(4:6, 8, 9, 13)]
+
+# Prints descriptive statistics
+kable(t(data.frame(death, mask, tests, elderly, nursing, density)), caption = "Descriptive Statistics")
+
+rm(death, mask, tests, elderly, nursing, density)
+
+```
