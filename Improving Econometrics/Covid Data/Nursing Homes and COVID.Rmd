@@ -536,14 +536,13 @@ results5 <- lm(data = covidData, formula = deathLN ~ Nursing +
                  `Has Strict Lockdown` + 
                  `Urban.Density`)
 
-
 # The model summary
 modelsummary(models = list("Multivariate Regression Model Statistics After Lin-Log Transformation, Without Elderly" = results5),
             statistic = c("p.value", "conf.int", "std.error", "statistic"),
             output = "markdown")
 
 # Removing old variables
-rm(results5)
+rm(results, linLog)
 
 ```
 
@@ -551,4 +550,145 @@ This revised model has reduced multicollinearity to a more acceptable level and 
 
 *Identifying Heteroscedasticity*
 
-[Step 1. Visual Analysis of Data]{.ul}: Homoscedasticity, perhaps known better as "equal spread", of the data in the regression is necessary for the assumptions of OLS to hold. If the standard error at a given area of the sample regression function (SRF) is not the same as all the other areas of the SRF, the model's results may be misleading. After visual analysis, the data appears to have homoscedasticity.
+[Step 1. Visual Analysis of Data]{.ul}: Homoscedasticity, perhaps known better as "equal spread", of the data in the regression is necessary for the assumptions of OLS to hold. If the standard error at a given area of the sample regression function (SRF) is not the same as all the other areas of the SRF, the model's results may be misleading. After visual analysis, the data appears to have some semblance of homoscedasticity.
+
+```{r Death vs standardized predicted vals}
+
+# This section checks for heteroscedasticity in the data
+ggplot(mapping = aes(y = deathLN,x = Normalize(residuals.lm(results5)))) +
+  geom_point() +
+  geom_smooth(method = "lm", se = F) +
+  xlab("Regression Standardized Predicted Values") +
+  ylab("Death") +
+  ggtitle("Dependent Variable: Death\n") +
+  theme(plot.title = element_text(hjust = 0.5))
+
+```
+
+In addition to the visual analysis of the regression, the form of the predicted values of both the independent (Yi-hat) and dependent variables (Xi-hat) when graphed against residual squared (ui-hat^2^) values should be examined. A "parallel band" in the data is the only desired pattern in the output, as it suggests homoscedasticity. Horizontal lines have been added to the plots for ease of reading:
+
+```{r hetero}
+
+# The error terms
+error <- residuals.lm(results5)
+# The square of the error terms
+errorsq <- error^2
+
+# Plotting the error terms against the
+# dependent variable
+heteroDep <- ggplot() +
+  geom_point(mapping = aes(x = deathLN, y = errorsq)) +
+  geom_hline(yintercept = 0.225) +
+  geom_hline(yintercept = -0.01) +
+  xlab("Death") +
+  ylab("Residual Squared") +
+  ggtitle("Examining for Heteroscedasticity") +
+  theme(plot.title = element_text(hjust = 0.5))
+
+
+# Plotting the error terms against the
+# predicted values
+heteroIndep <- ggplot() +
+  geom_point(mapping = aes(x = predict.lm(results5), y = errorsq)) +
+  geom_hline(yintercept = 0.225) +
+  geom_hline(yintercept = -0.01) +
+  xlab("Predicted Value (Xi)") +
+  ylab("Residual Squared")
+
+
+heteroDep / heteroIndep
+
+# Removing old variables
+rm(heteroDep, heteroIndep)
+
+```
+
+When graphed against the residual squared values, Yi and Xi exhibit moderate levels of heteroscedasticity. Empirical investigation into the presence of heteroscedasticity of the data is necessary to draw more decisive conclusions.
+
+[Step 3. Empirical Analysis: Glejser Method]{.ul}
+
+The Glejser method for determining heteroscedasticity provides various means for evaluating the degree of heteroscedasticity within the data by running regression models on the error terms. The Glejser tests used in this analysis take the following form:
+
+$|u-hati| = B1 + B2Xi + . . . + BkXk$
+
+or
+
+$|u-hati2| = B1 + B2Xi + . . . + BkXk$
+
+The null hypothesis states that the data is homoscedastic, so if the regression statistics have a high p-value and a low R-square, the data has homoscedastic data. If the Glejser test's null hypothesis is rejected, the model has heteroscedastic data. The results of the first Glejser test for the data used in this model are as follows:
+
+```{r glejser abs error}
+
+# Stores the absolute value of the error term
+absError <- abs(error)
+
+glej1 <- lm(data = covidData, formula = absError ~ Nursing +
+                 `% Wearing Mask` +
+                 `Total Tests per 100k` +
+                 `Has Strict Lockdown` + 
+                 `Urban.Density`)
+# The model summary
+modelsummary(models = list("Glejser Test (Absolute Value of Residuals is Dependent Variable)" = glej1),
+            statistic = c("p.value", "conf.int", "std.error", "statistic"),
+            output = "markdown")
+
+```
+
+The results from the second Glejser test are as follows:
+
+```{r glejser errorsq}
+
+glej2 <- lm(data = covidData, formula = absError ~ Nursing +
+                 `% Wearing Mask` +
+                 `Total Tests per 100k` +
+                 `Has Strict Lockdown` + 
+                 `Urban.Density`)
+# The model summary
+modelsummary(models = list("Glejser Test (Squared Residuals is Dependent Variable)" = glej2),
+            statistic = c("p.value", "conf.int", "std.error", "statistic"),
+            output = "markdown")
+
+
+```
+
+Fortunately, none of the predictors are significant, meaning heteroskedasticity is not a 'big enough' problem to invalidate this study's conclusions.
+
+To simplify the analysis, there are two versions of the regression model which will be discussed for the remainder of the paper. The first is the initial regression, which was the very first multiple regression in this paper. The other is the revised model, which involved taking the natural logarithm of the dependent variable--the regression labeled "Multivariate Regression Model Statistics After Lin-Log Transformation, Without Elderly."
+
+*Testing for Autocorrelation*
+
+Autocorrelation refers to the degree of correlation between the values of the same variable across different observations in the data. Autocorrelation occurs most often in time series and panel data, and can be caused by a multitude of factors, though it is quite rare in cross-sectional data. To test for autocorrelation, the Durbin-Watson test will be performed on the data. If the D-W statistic is close to 2.0, the data are unlikely to be autocorrelated. The results from the Durbin-Watson test using the data from the final regression are shown below:
+
+```{r durbin watson}
+
+# This section checks the dataset for autocorrelation
+
+# Testing the model for autocorrelation using the Durbin-Watson test
+durbinWatsonTest(results5) %>% 
+  unclass() %>% # stores the results in a list
+  unlist() %>% # stores the results in a character vector
+  t() %>% # transpose to put the values in a column
+  kable()
+
+## Since the p-value is greater than 0.05, we cannot reject the null
+## hypothesis (which states that the variables have NO autocorrelation).
+## We can conclude, therefore, that the variables are NOT autocorrelated.
+
+```
+
+Since the D-W statistic is close to 2.0, it is reasonable to dismiss the possibility that the data are autocorrelated. This result is not surprising because the data used in this study is cross-sectional.
+
+**Conclusion**
+
+              The data used in the regressions provide a unique look into the various factors determining the number of people who die from the coronavirus. One conclusion which was very interesting was that the elderly variable (B4) was not significant in any of the regressions performed in the study. This disputes the narrative claiming states with older populations, such as Florida, are more likely to have higher death rates solely due to the fact that there are more people over the age 65 as a percent of the population. The data in this study provides mixed results on the role lockdowns play on the death rate. It was significant in the simple regression model, though lingering multicollinearity may have raised its p-value. Regardless, the significance of the lockdown variable should not be entirely trusted because of the time disparity noted in the section on hesitations within this model.
+
+              The final regression's testing variable disputes claims that increased test capacity will lower new deaths to the virus. The sign on the coefficient for Tests (B3) was positive with a value of 2.38, which means that an increase of one in the inverse of tests per 100k people means the ratio of the natural logarithm of new COVID deaths per 100k to the number of tests per 100k increases by 2-3. This defied expectations from the beginning of the study stating that more tests would reduce the number of deaths. Further research should be undertaken to confirm the results of this study. Even if the number of tests per 100k implies that there are more deaths due to the coronavirus, perhaps testing capacity aids other purposes, such as slowing the spread of the virus. Alternatively, though, the results from testing could be a case study on opportunity cost---it is possible that states increased spending on the production of tests at the expense of other needed equipment. Again, this is mere speculation and further research is required to determine the efficacy of tests to reduce the number of COVID deaths.
+
+              The Mask (B5) variable was highly significant in almost all regressions done in this
+study. In each revision of the model, however, the masks variable had a coefficient close to zero, although it was negative. This suggests that masks only have a modest impact on the increase in deaths. Put differently, masks only reduce the deaths due to COVID modestly. Despite low practical significance, masks do what was predicted at the start of beginning of this paper. The more people wear masks, the fewer the deaths due to COVID---controlled for population.
+
+Another surprising result from the final regression was that the Urban (B6) variable, though statistically significant using a one-tailed test, was not practically significant. This upsets the predictions from the beginning of the paper expecting moderate practical significance. The sign of the coefficient is positive---as urban densities increase, the number of deaths due to COVID increases, but they increase by a negligible amount. Urban densities seem to have little bearing on the number of new deaths due to the virus, which is surprising because one expects that as urban densities increase, people are more likely to come into contact with one another. Further exploration into that expectation would also make for a compelling follow-up study.
+
+              The lockdown variable had promising results in the simple regression model but continued to disappoint the prediction of moderate significance made at the beginning of the paper. Judging by the results of the final regression, the lockdown variable was not significant enough to rule out the possibility that the true value of B7 was zero. This suggests strict lockdowns do not have one of their most important intended effects---reducing the number of deaths due to COVID. To reiterate from the Hesitations section of the paper, however, this variable should be recalculated with more accurate data; simply because a state had a lockdown in mid-September does not necessarily mean they have a strict lockdown in mid-October---the policy could have since reversed for states with or without a strict lockdown.
+
+              In all regressions, the variable of interest---Nursing (B2)---was highly significant. What is worth mentioning about this variable is that it says nothing about the conditions of the facilities in which the residents live, staffing shortages, or a whole host of other factors relevant to the spread of the virus. Simply the number of patients per the adult population was enough to make the variable very significant. Future research taking discrepancies between facilities into account may tell a very interesting story. This outcome is consistent with the publicity surrounding deaths coming from nursing homes throughout the country. The nursing home variable supports the notion that the coronavirus has hit these facilities especially hard, claiming the lives of many. In a practical sense, these results support what people have thought all along: those at greatest risk of developing terminal illness---those in nursing facilities---should take the utmost care to avoid close contact with carriers of the virus. I leave for the reader the decision on whether the Governor of New York State has any culpability in the death of Granny.

@@ -51,6 +51,30 @@ heteroIndep <- ggplot() +
 heteroDep / heteroIndep
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+###################################################################################################################
+
+
+
 # Running linear regressions against the absolute value of the error terms
 
 # Stores the absolute value of the error term
