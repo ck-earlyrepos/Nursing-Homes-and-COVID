@@ -2,14 +2,17 @@
 title: "Nursing Homes and COVID"
 author: "Connor Krenzer"
 date: "11/31/2020"
-output: html_document
+output:
+  html_document:
+    toc: yes
+    toc_depth: 2
 ---
 
-#### **The Story:**
+# The Story:
 
 Old people in nursing homes are dying en masse to the coronavirus, skewing the death rate upward and providing public officials greater justification for prolonged lockdowns. This is a common talking point I have heard over the past 6 months and I think econometrics provides a unique opportunity to test it out.
 
-**Why This Story?**
+## Why This Story?
 
 There are two reasons I am researching the coronavirus:
 
@@ -17,7 +20,7 @@ There are two reasons I am researching the coronavirus:
 
 2.  This topic provides me with an excellent introductory project on web scraping. The coronavirus is a highly publicized issue, meaning there have been countless articles and reports published on the matter. The data is all there in the articles, but it is not organized in the .csv format I have grown all too accustomed to. Most data collected for this project was pulled directly off webpages or read in from .PDF files that were created from images downloaded from webpages, all with the use of R. I have the opportunity to learn some new R packages and get hands-on experience tidying data from its raw, messy form.
 
-**My Thoughts:**
+## My Thoughts:
 
 Politicians rank highly among the handful of people who have benefitted from the coronavirus. I think they love the extra attention a little too much. Did you know who Dan McCoy was at the beginning of March this year [2020]? Me neither. I buy into the story that the nursing home fiasco we've heard so much about caused the number of deaths from the coronavirus to explode. Therefore, I expect variation in the COVID death rate (deaths from COVID) to be explained reasonably well by the rate of nursing home patients in the adult population.
 
@@ -26,7 +29,7 @@ Politicians rank highly among the handful of people who have benefitted from the
 # Code chunks will be omitted by defualt.
 # Graphs will be included.
 knitr::opts_chunk$set(echo = FALSE,
-                      include = FALSE,
+                      include = TRUE,
                       results = "show",
                       error = FALSE,
                       warning = FALSE,
@@ -48,9 +51,9 @@ pacman::p_load(knitr, modelsummary)
 
 
 # Project-specific packages
-pacman::p_load(corrplot, car, skedastic,
-               pastecs, QuantPsyc, olsrr,
-               perturb)
+pacman::p_load(corrplot, car,
+               QuantPsyc, olsrr,
+               pastecs)
 
 library(backports)
 
@@ -74,7 +77,7 @@ covidData <- read_csv("COVID data.csv",
 
 Using regression analysis subject to the BLUE method of Least Squares, I will test cross-sectional data from the 50 states and DC using the following equation:
 
-\$Deaths = β~1~ + β~2~Nursing + β~3~Tests + β~4~Elderly + β~5~Mask + β~6~Density + β~7~Lockdown\$
+$Deaths = β1 + β2Nursing + β3Tests + β4Elderly + β5Mask + β6Density + β7Lockdown$
 
 +--------------------------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | **Variable**             | **Definition**                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    | **Source**                                                                                                                                                                              |
@@ -116,7 +119,7 @@ Using regression analysis subject to the BLUE method of Least Squares, I will te
 | Urban           | \+            | Moderate Significance             | Moderate Significance           |
 +-----------------+---------------+-----------------------------------+---------------------------------+
 
-**Hesitations**
+## Hesitations
 
 A weakness key to my variables deals with time---the timeframes on several of my variables do not line up properly. The most notable of these variables is the lockdown variable, which was last updated on September 11^th^, 2020, while several other variables use data from October 23^rd^, 2020. The urban variable used in later iterations of the model contains data from 2010; though it is unlikely drastic urban expansions have happened from one state to another in the last ten years, more recent data would only increase the reliability of the results. Smaller problems dealing with time are with regards to the Nursing (B2) and Elderly (B4) variables. The data in those are from 2019 and---although the difference will probably not matter with elderly---if people are worried about patients in nursing facilities catching the coronavirus, it is possible that many who were in nursing facilities a year ago have decided to go elsewhere, reducing the accuracy of the nursing variable. Another problem is that DC will heavily skew the population density results. Regardless of the accuracy of this model, the coronavirus' dangers cannot be dismissed if all the variables explain little of the variation in the COVID death rate. Other factors, such as lingering symptoms or permanent health problems from the virus also need consideration in discussions of policy.
 
@@ -136,7 +139,9 @@ rm(death, mask, tests, elderly, nursing, density)
 
 ```
 
-**Simple Regression Models**
+# Modeling
+
+## Simple Regression Models
 
 The beginning of the analysis applied each explanatory variable in a simple linear regression against the dependent variable, "Death" with a 95 percent confidence interval. The calculations are provided in the table below:
 
@@ -162,7 +167,7 @@ modelsummary(models = list(
             "Lockdown" = simple_lockdown,
             "Elderly" = simple_elderly,
             "Nursing" = simple_nursing),
-            statistic = c("p.value", "conf.int", "std.error", "statistic"),
+            statistic = c("pval = {p.value}", "conf.int", "std. error = {std.error}", "t = {statistic}"),
             output = "markdown")
 
 # Removing old variables
@@ -224,7 +229,7 @@ rm(noRestr, restr)
 
 ```
 
-**Multivariate Regression Models**
+## Multivariate Regression Models
 
 The following table displays the preliminary results estimating the COVID death rate (the dependent variable) using a linear regression model containing a 95 percent confidence interval with all six explanatory variables included.
 
@@ -237,7 +242,7 @@ results <- lm(`Death Rate` ~ `Nursing` +
                 `Has Strict Lockdown`, data = covidData,)
 
 modelsummary(models = list(results),
-            statistic = c("p.value", "conf.int", "std.error", "statistic"),
+            statistic = c("pval = {p.value}", "conf.int", "std. error = {std.error}", "t = {statistic}"),
             notes = "Predictors: Percent Wearing Masks, State Population Density, Total COVID Tests Per 100k, Percent of Population over 65, Nursing Home Residents Per 100k Adults",
             output = "markdown")
 
@@ -249,7 +254,7 @@ Compared with the simple regression models, the t-stats and p-values of the expl
 
 The increase in p-values across all variables indicates multicollinearity exists among the explanatory variables. To determine the extent that collinearity is an issue with the variables in the model, data for the explanatory variables will be examined both visually and with correlation coefficients.
 
-**Examining Multicollinearity**
+## Examining Multicollinearity
 
 After testing for multicollinearity, there is a high likelihood that multiple variables will move in tandem with one another in a linear regression model. The correlation matrix below visualizes the extent to which multicollinearity affects each variable. For a quantitative approach, the table beneath the correlation matrix provides the absolute value of the zero-order correlation coefficients between variables.
 
@@ -304,7 +309,7 @@ test_density <- lm(data = covidData, formula = `Total Tests per 100k` ~ `Populat
 modelsummary(models = list("Population vs Masks" = pop_mask,
                            "Nursing vs Masks" = nurse_mask,
                            "Tests vs Masks" = test_density),
-            statistic = c("p.value", "conf.int", "std.error", "statistic"),
+            statistic = c("pval = {p.value}", "conf.int", "std. error = {std.error}", "t = {statistic}"),
             output = "markdown")
 
 # Removing old variables
@@ -331,9 +336,9 @@ The table above indicates that there are three conditions with a variance propor
 
 Despite the promising results of the collinearity statistics, steps to minimize multicollinearity in the regression model will be pursued, first by removing a variable deemed nonessential to the investigation. If removing variables does not remove multicollinearity enough to make a meaningful difference, a proxy variable will be introduced to attempt to resolve this issue. Finally, if neither of those fix multicollinearity, transformations of the variables in the initial model will be attempted using log-lin, lin-log, and log-log methods to examine the relationship between changes in explanatory variables to describe changes in the dependent variable.
 
-**Resolving Multicollinearity**
+## Resolving Multicollinearity
 
-*Method 1: Removing nonessential variables*
+### Method 1: Removing nonessential variables
 
 The best candidate to remove from the model is the population density variable. It has an extreme outlier due to the District of Columbia having a far higher population density than that of entire states and has the two strongest correlations among variables in the model. The District of Columbia was not removed from the model because its observation in the population density variable was the only variable in the entire model containing an outlier more than three sample standard deviations away from the mean. Even after removing the District of Columbia from the dataset, changes in the significance were minimal. Regardless, removing the population density variable will also remove the only outlier in the dataset. Further, population density does not serve as an ideal proxy for how frequently people come into contact with one another (and hence increase the spread of the coronavirus); it is deeply flawed, as people are not dispersed evenly within the state's borders---many (if not most) live in cities while the rest of the state remains rural. The following table shows the results from removing population density variable from the initial regression model:
 
@@ -348,7 +353,7 @@ results2 <- lm(data = covidData, formula = `Death Rate` ~ Nursing +
 
 # The model summary
 modelsummary(models = list("After Removing Density" = results2),
-            statistic = c("p.value", "conf.int", "std.error", "statistic"),
+            statistic = c("pval = {p.value}", "conf.int", "std. error = {std.error}", "t = {statistic}"),
             output = "markdown")
 
 # The variance proportion table (also provides eigenvalues in column 1)
@@ -378,11 +383,9 @@ rm(correlation2, results2)
 
 Although removing the density variable had negligible effects on R-square, the p-values lowered for all values except Tests, which was expected. Since collinearity between masks and nursing is still above the \|0.3\| benchmark, further steps should be taken to soften this issue.
 
-*Method 2: Substituting in proxies*
+### Method 2: Substituting in proxies
 
 As noted in the beginning of this section, one of the greatest problems with the state population density variable is that it does not take into account where in a state most people are clustered. In an attempt to remedy the lingering multicollinearity, a proxy variable containing urban population density was substituted in the place of the density by state population and landmass variable. States with more urban land and more people living in it have greater urban densities than states with only a few large cities but extensive landmass. The new regression model is shown in the table below:
-
-\#\#\#\#\#\#\#YOU ARE ON RESULTS5 OF THE CORRELATION SCRIPT!!! ONLY CORRELATION, HETERO, AND AUTOCORRELATION REMAIN TO FIX!!!
 
 ```{r proxy substitution}
 
@@ -396,7 +399,7 @@ results3 <- lm(data = covidData, formula = `Death Rate` ~ Nursing +
 
 # The model summary
 modelsummary(models = list("Multivariate Regression Model Statistics, with Urban Population Density" = results3),
-            statistic = c("p.value", "conf.int", "std.error", "statistic"),
+            statistic = c("pval = {p.value}", "conf.int", "std. error = {std.error}", "t = {statistic}"),
             output = "markdown")
 
 
@@ -429,9 +432,11 @@ rm(correlation3, results3)
 
 As the charts above illustrate, substituting urban density in for state population density did not resolve multicollinearity in the regression model. Therefore, the use of urban population density is not justified.
 
-*Method 3: Changing the form of the initial regression equation*
+### Method 3: Changing the form of the initial regression equation
 
-[Log-Lin Method:]{.ul} The "log-lin" method of correcting multicollinearity takes the natural logarithm of the explanatory variables and repeats the regression using the new, transformed explanatory variables. The dependent variable remains unchanged. It did not improve the p-values of the variables compared to the initial regression.
+#### Log-Lin Method:
+
+The "log-lin" method of correcting multicollinearity takes the natural logarithm of the explanatory variables and repeats the regression using the new, transformed explanatory variables. The dependent variable remains unchanged. It did not improve the p-values of the variables compared to the initial regression.
 
 ```{r log lin, eval = FALSE}
 
@@ -451,7 +456,9 @@ summary(lm(data = covidData, formula = `Death Rate` ~ I(log(Nursing)) +
 
 ```
 
-[Lin-Log:]{.ul} The "lin-log" method of correcting multicollinearity takes the natural log of the dependent variable and performs the regression using the original explanatory variables on the transformed dependent variable. There is a problem with this method in particular because Death (Y) contains values of zero, which is outside the domain of the natural logarithm. For the period sampled for this study, neither Maine nor Vermont had any new deaths due to the coronavirus. To allow this transformation to take place, the zeroes were replaced with values arbitrarily close to zero. The results of the new regression are provided in the tables below:
+#### Lin-Log:
+
+The "lin-log" method of correcting multicollinearity takes the natural log of the dependent variable and performs the regression using the original explanatory variables on the transformed dependent variable. There is a problem with this method in particular because Death (Y) contains values of zero, which is outside the domain of the natural logarithm. For the period sampled for this study, neither Maine nor Vermont had any new deaths due to the coronavirus. To allow this transformation to take place, the zeroes were replaced with values arbitrarily close to zero. The results of the new regression are provided in the tables below:
 
 ```{r lin log}
 
@@ -471,7 +478,7 @@ linLog <- lm(data = covidData, formula = deathLN ~ Nursing +
 
 # The model summary
 modelsummary(models = list("Multivariate Regression Model Statistics After Lin-Log Transformation" = linLog),
-            statistic = c("p.value", "conf.int", "std.error", "statistic"),
+            statistic = c("pval = {p.value}", "conf.int", "std. error = {std.error}", "t = {statistic}"),
             output = "markdown")
 
 # Removing old variables
@@ -481,7 +488,9 @@ rm(linLog)
 
 This transformation improved the amount of variation the predictors explain in the natural log transform of the dependent variable. From the initial regression, the difference between the R-square and adjusted R-square remained roughly the same in this new model, however, the R-square in the new model is considerably greater at .568. The significance of the variables remains unchanged--only masks and the nursing home coefficients are significant.
 
-[Log-Log:]{.ul} The "log-log" method of correcting multicollinearity involves taking the natural logarithm of both the dependent variable and the explanatory variables. As with the "lin-log" method, the values for Maine and Vermont were given arbitrarily small values to allow the natural logarithm to remain within its domain. This method did not improve the statistical significance of the variables in the regression compared to the original regression, although similar effects on the R-square were found between this and the 'lin log' model.
+#### Log-Log:
+
+The "log-log" method of correcting multicollinearity involves taking the natural logarithm of both the dependent variable and the explanatory variables. As with the "lin-log" method, the values for Maine and Vermont were given arbitrarily small values to allow the natural logarithm to remain within its domain. This method did not improve the statistical significance of the variables in the regression compared to the original regression, although similar effects on the R-square were found between this and the 'lin log' model.
 
 ```{r log log, eval = FALSE}
 
@@ -495,7 +504,9 @@ summary(lm(data = covidData, formula = deathLN ~ I(log(Nursing)) +
 
 ```
 
-*An Improved Model*
+# Final Tests
+
+## An Improved Model
 
 The degree of multicollinearity within the original model mandated that measures be taken to alter the equation. Removing density from the model made modest improvements in the significance of variables, but the gains were merely incremental and changed little in the regression results. Substituting in a proxy variable for the state population density did not improve the results on the variables in their original form. Variable transformation proved very effective at improving the results of the regressions. Although not shown in the regressions above, the p-value in a simple linear regression of new COVID deaths against urban density was significant. This made me curious to see whether a "lin-log" transformation of the urban variable would improve the results of the regression. Intuitively, the urban density variable is a better proxy for how frequently people come into contact with one another than the state population density and should therefore make a more accurate predictor in the model. Despite the fact that multicollinearity in the model increased after replacing state population density with urban density, the "lin-log" method should have eased the problems posed by the greater level of multicollinearity. The results of the regression using urban density and the "lin-log" method are the following:
 
@@ -518,7 +529,7 @@ results4 <- lm(data = covidData, formula = deathLN ~ Nursing +
 
 # The model summary
 modelsummary(models = list("Multivariate Regression Model Statistics After Lin-Log Transformation, With Urban Density" = results4),
-            statistic = c("p.value", "conf.int", "std.error", "statistic"),
+            statistic = c("pval = {p.value}", "conf.int", "std. error = {std.error}", "t = {statistic}"),
             output = "markdown")
 
 # Removing old variables
@@ -538,19 +549,21 @@ results5 <- lm(data = covidData, formula = deathLN ~ Nursing +
 
 # The model summary
 modelsummary(models = list("Multivariate Regression Model Statistics After Lin-Log Transformation, Without Elderly" = results5),
-            statistic = c("p.value", "conf.int", "std.error", "statistic"),
+            statistic = c("pval = {p.value}", "conf.int", "std. error = {std.error}", "t = {statistic}"),
             output = "markdown")
 
 # Removing old variables
-rm(results, linLog)
+rm(results)
 
 ```
 
 This revised model has reduced multicollinearity to a more acceptable level and improved the significance of the predictors in the process. The multicollinearity which remains is likely minimal and should not dramatically affect the conclusions drawn from this analysis. The measures taken to reduce multicollinearity also lowered the p-values dramatically and doubled the number of significant variables from two to four. Although the R-square dropped by .05 in this revised model, it is still preferable to the initial model because the results obtained in the revised model are considerably more reliable with respect to the significance of the variables.
 
-*Identifying Heteroscedasticity*
+### Identifying Heteroscedasticity
 
-[Step 1. Visual Analysis of Data]{.ul}: Homoscedasticity, perhaps known better as "equal spread", of the data in the regression is necessary for the assumptions of OLS to hold. If the standard error at a given area of the sample regression function (SRF) is not the same as all the other areas of the SRF, the model's results may be misleading. After visual analysis, the data appears to have some semblance of homoscedasticity.
+#### Step 1. Visual Analysis of Data
+
+Homoscedasticity, perhaps known better as "equal spread", of the data in the regression is necessary for the assumptions of OLS to hold. If the standard error at a given area of the sample regression function (SRF) is not the same as all the other areas of the SRF, the model's results may be misleading. After visual analysis, the data appears to have some semblance of homoscedasticity.
 
 ```{r Death vs standardized predicted vals}
 
@@ -599,13 +612,13 @@ heteroIndep <- ggplot() +
 heteroDep / heteroIndep
 
 # Removing old variables
-rm(heteroDep, heteroIndep, results4)
+rm(heteroDep, heteroIndep)
 
 ```
 
 When graphed against the residual squared values, Yi and Xi exhibit moderate levels of heteroscedasticity. Empirical investigation into the presence of heteroscedasticity of the data is necessary to draw more decisive conclusions.
 
-[Step 3. Empirical Analysis: Glejser Method]{.ul}
+#### Step 2. Empirical Analysis: Glejser Method
 
 The Glejser method for determining heteroscedasticity provides various means for evaluating the degree of heteroscedasticity within the data by running regression models on the error terms. The Glejser tests used in this analysis take the following form:
 
@@ -629,7 +642,7 @@ glej1 <- lm(data = covidData, formula = absError ~ Nursing +
                  `Urban.Density`)
 # The model summary
 modelsummary(models = list("Glejser Test (Absolute Value of Residuals is Dependent Variable)" = glej1),
-            statistic = c("p.value", "conf.int", "std.error", "statistic"),
+            statistic = c("pval = {p.value}", "conf.int", "std. error = {std.error}", "t = {statistic}"),
             output = "markdown")
 
 # Removing old variables
@@ -648,7 +661,7 @@ glej2 <- lm(data = covidData, formula = absError ~ Nursing +
                  `Urban.Density`)
 # The model summary
 modelsummary(models = list("Glejser Test (Squared Residuals is Dependent Variable)" = glej2),
-            statistic = c("p.value", "conf.int", "std.error", "statistic"),
+            statistic = c("pval = {p.value}", "conf.int", "std. error = {std.error}", "t = {statistic}"),
             output = "markdown")
 
 # Removing old variables
@@ -660,7 +673,7 @@ Fortunately, none of the predictors are significant, meaning heteroskedasticity 
 
 To simplify the analysis, there are two versions of the regression model which will be discussed for the remainder of the paper. The first is the initial regression, which was the very first multiple regression in this paper. The other is the revised model, which involved taking the natural logarithm of the dependent variable--the regression labeled "Multivariate Regression Model Statistics After Lin-Log Transformation, Without Elderly."
 
-*Testing for Autocorrelation*
+### Testing for Autocorrelation
 
 Autocorrelation refers to the degree of correlation between the values of the same variable across different observations in the data. Autocorrelation occurs most often in time series and panel data, and can be caused by a multitude of factors, though it is quite rare in cross-sectional data. To test for autocorrelation, the Durbin-Watson test will be performed on the data. If the D-W statistic is close to 2.0, the data are unlikely to be autocorrelated. The results from the Durbin-Watson test using the data from the final regression are shown below:
 
@@ -669,26 +682,58 @@ Autocorrelation refers to the degree of correlation between the values of the sa
 # This section checks the dataset for autocorrelation
 
 # Testing the model for autocorrelation using the Durbin-Watson test
-durbinWatsonTest(results5) %>% 
-  unclass() %>% # stores the results in a list
-  unlist() %>% # stores the results in a character vector
-  t() %>% # transpose to put the values in a column
-  kable()
+durbin <- durbinWatsonTest(results5)
+
+# Rounding values
+durbin$r <- round(durbin$r, 3)
+durbin$dw <- round(durbin$dw, 3)
+durbin$p <- round(durbin$p, 3)
+
+# Making durbin a tibble
+durbin <- tibble("r" = durbin$r,
+       "durbin-watson" = durbin$dw,
+       "pval" = durbin$p,
+       "alternative" = durbin$alternative)
+
+# The output
+kable(durbin, align = 'c')
 
 ## Since the p-value is greater than 0.05, we cannot reject the null
 ## hypothesis (which states that the variables have NO autocorrelation).
 ## We can conclude, therefore, that the variables are NOT autocorrelated.
 
-rm(absError, deathLN, error, errorsq)
+rm(absError, deathLN, error, errorsq, durbin)
 
 ```
 
+$~$
+
 Since the D-W statistic is close to 2.0, it is reasonable to dismiss the possibility that the data are autocorrelated. This result is not surprising because the data used in this study is cross-sectional.
 
-**Conclusion**
+# Conclusion
 
 The data used in the regressions provide a unique look into the various factors influencing the number of people who die from the coronavirus. One conclusion which was very interesting was that the elderly variable (β~4~) was not significant in any of the regressions performed in the study. This disputes the narrative claiming states with older populations, such as Florida, are more likely to have higher death rates solely due to the fact that there are more people over the age 65 as a percent of the population. The data in this study provides mixed results on the role lockdowns play on the death rate. It was significant in the simple regression model, though lingering multicollinearity may have raised its p-value. Judging by the results of the final regression, the lockdown variable was not significant enough to rule out the possibility that the true value of β~7~ was zero. This suggests strict lockdowns do not have one of their most important intended effects---reducing the number of deaths due to COVID. Regardless, the significance of the lockdown variable should not be entirely trusted because of the time disparity. To reiterate from the Hesitations section of the paper, this variable should be recalculated with more accurate data; simply because a state had a lockdown in mid-September does not necessarily mean they have a strict lockdown in mid-October---the policy could have since reversed for states with or without a strict lockdown.
 
 The Mask (β~5~) variable was highly significant in all regressions done in this study. In each revision of the model, however, the masks variable had a coefficient close to zero, although it was negative. This suggests that masks only have a modest impact on the increase in deaths. Put differently, masks only reduce the deaths due to COVID modestly. Despite low practical significance, masks do what was predicted at the start of beginning of this paper. The more people wear masks, the fewer the deaths due to COVID---controlled for population.
 
-In all regressions, the variable of interest---Nursing (B2)---was highly significant. What is worth mentioning about this variable is that it says nothing about the conditions of the facilities in which the residents live, staffing shortages, or a whole host of other factors relevant to the spread of the virus. Simply the number of patients per the adult population was enough to make the variable very significant. Future research taking discrepancies between facilities into account may tell a very interesting story. This outcome is consistent with the publicity surrounding deaths coming from nursing homes throughout the country. The nursing home variable supports the notion that the coronavirus has hit these facilities especially hard and claimed the lives of many. In a practical sense, these results support what people have thought all along: those at greatest risk of developing terminal illness---those in nursing facilities---should take the utmost care to avoid close contact with carriers of the virus. I leave for the reader the decision on whether the Governor of New York State has any culpability in Granny's death.
+In all regressions, the variable of interest---Nursing (β~2~)---was highly significant. What is worth mentioning about this variable is that it says nothing about the conditions of the facilities in which the residents live, staffing shortages, or a whole host of other factors relevant to the spread of the virus. Simply the number of patients per the adult population was enough to make the variable very significant. Future research taking discrepancies between facilities into account may tell a very interesting story. This outcome is consistent with the publicity surrounding deaths coming from nursing homes throughout the country. The nursing home variable supports the notion that the coronavirus has hit these facilities especially hard and claimed the lives of many. In a practical sense, these results support what people have thought all along: those at greatest risk of developing terminal illness---those in nursing facilities---should take the utmost care to avoid close contact with carriers of the virus. I leave for the reader the decision on whether the Governor of New York State has any culpability in Granny's death.
+
+# References
+
+[United States by Density 2020](https://worldpopulationreview.com/state-rankings/state-densities)
+
+[List of Coronavirus-Related Restrictions in Every State](https://www.aarp.org/politics-society/government-elections/info-2020/coronavirus-state-restrictions.html)
+
+[The COVID-19 Testing Gap in the U.S.](https://testing.predictcovid.com/)
+
+[COVID-19 Surveillance | coronavirus](https://coronavirus.dc.gov/data)
+
+[U.S. Census Bureau QuickFacts: Washington city, District of Columbia; District of Columbia](https://www.census.gov/quickfacts/fact/table/washingtoncitydistrictofcolumbia,DC/PST045219)
+
+[Data Definitions | The COVID Tracking Project](https://covidtracking.com/about-data/data-definitions#pcr-tests)
+
+[Map: Which states are reopening and closing again after coronavirus shutdown - Washington Post](https://www.washingtonpost.com/graphics/2020/national/states-reopening-coronavirus-map/)
+
+[Population Distribution by Age | KFF](https://www.kff.org/other/state-indicator/distribution-by-age/?dataView=1&currentTimeframe=0&selectedDistributions=65&selectedRows=%7B%22states%22:%7B%22all%22:%7B%7D%7D,%22wrapups%22:%7B%22united-states%22:%7B%7D%7D%7D&sortModel=%7B%22colId%22:%22Location%22,%22sort%22:%22asc%22%7D)
+
+[Total Number of Residents in Certified Nursing Facilities | KFF](https://www.kff.org/other/state-indicator/number-of-nursing-facility-residents/?currentTimeframe=0&sortModel=%7B%22colId%22:%22Location%22,%22sort%22:%22asc%22%7D)
