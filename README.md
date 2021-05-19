@@ -1,8 +1,11 @@
+# Output
+You can see the output [here](https://htmlpreview.github.io/?https://github.com/Ckrenzer/Nursing-Homes-and-COVID/blob/main/Nursing-Homes-and-COVID.html).
+
 # About
 
 This project models the death rate due to the coronavirus in mid-October, 2020.
 
-This project used to be a complete mess, and many of the results were invalidated because of some rookie mistakes. I revised the paper, models, and code, and the final product became much shorter (and more accurate)! You can see the output [here](https://htmlpreview.github.io/?https://github.com/Ckrenzer/Nursing-Homes-and-COVID/blob/main/Nursing-Homes-and-COVID.html).
+This project used to be a complete mess, and many of the results were invalidated because of some rookie mistakes. I revised the paper, models, and code, and the final product became much shorter (and more accurate)!
 
 To make reproducibility of the results more permanent, the data was compiled into a csv file, so--although I initially scraped all this data myself--the implementation no longer scrapes different documents.
 
