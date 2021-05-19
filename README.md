@@ -1,7 +1,4 @@
-# Output
-You can see the output [here](https://htmlpreview.github.io/?https://github.com/Ckrenzer/Nursing-Homes-and-COVID/blob/main/Nursing-Homes-and-COVID.html).
-
-# About
+# Nursing-Homes-and-COVID
 
 This project models the death rate due to the coronavirus in mid-October, 2020.
 
@@ -13,3 +10,5 @@ The intro and conclusions are the most entertaining parts, if you don't want to 
 
 This is a heavily improved version of my undergraduate econometrics project. My professor wanted us to be thorough in our investigation, and maybe you do too!
 
+# Output
+You can see the output [here](https://htmlpreview.github.io/?https://github.com/Ckrenzer/Nursing-Homes-and-COVID/blob/main/Nursing-Homes-and-COVID.html).
