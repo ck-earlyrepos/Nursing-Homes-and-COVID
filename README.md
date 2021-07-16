@@ -8,7 +8,7 @@ To make reproducibility of the results more permanent, the data was compiled int
 
 The intro and conclusions are the most entertaining parts, if you don't want to see a play-by-play of each problem encountered while assembling the model. The two most important variables included in this project were the mask and nursing home variables, respectively.
 
-This is a heavily edited version of my undergraduate econometrics project. My professor wanted us to be thorough in our investigation, and maybe you do too!
+This is a heavily edited version of my undergraduate econometrics project. My professor wanted us to be thorough in our investigations, and maybe you do too!
 
 # Output
 You can see the output [here](https://htmlpreview.github.io/?https://github.com/Ckrenzer/Nursing-Homes-and-COVID/blob/main/Nursing-Homes-and-COVID.html).
